@@ -54,9 +54,11 @@ typedef struct model
 MODEL *createModel();
 LAYER *createLayer(int nNeurons, Actv activation);
 PERCEPTRON *createPerceptron();
-int addLayer(struct queue **layers, int nNeurons, Actv activation);
+int addLayer(MODEL *network, int nNeurons, Actv activation);
 int compileNetwork(MODEL *network);
 float randomWeight();
-
+int stepForward(MODEL *network); 
+float sigmoid(float x);
+float d_sigmoid(float output);
 
 #endif
