@@ -35,6 +35,9 @@ typedef struct layer
 
 typedef struct model
 {
+    // This model though is implemented as a FSM
+    // since it's gonna be used for visualization and pedagogic purposes
+
     // Right now this code just features MLP
     /*
         AKA Multilayer Perceptron, so this structure could not exist
@@ -45,6 +48,7 @@ typedef struct model
 
     */
     struct queue *layers;        // Double linked queue to acces all the layers
+    struct list *currentLayer;
 }MODEL;
 
 MODEL *createModel();
