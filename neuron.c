@@ -9,9 +9,10 @@ MODEL *createModel(float learningRate)
 
     newM->layers = createWrap(); // Queue wrapper for the node list
     newM->currentLayer = NULL;
-    newM->learningRate = learningRate;
+    newM->learningRate = 0;
     newM->inputs = NULL;
     newM->targets = NULL;
+    newM->fit = train;
 
     return newM; 
 }
@@ -290,6 +291,75 @@ int stepBackward(MODEL *network)
     if (network->currentLayer == NULL) 
         return 1; 
     return 0;
+}
+
+int train(MODEL *network, float *inputData, float *targetData, int dataRows, int epochs, float learningRate) 
+{
+    network->learningRate = learningRate;
+
+    // The first layer defines the inputDim, the last layer defines the outputDim
+    /*
+        So if layer 1 has 4 neurons then the input in the flattened array has a length
+        of 4 before starting the next row
+    */
+    LAYER *firstLayer = (LAYER*)network->layers->first->data;
+    LAYER *lastLayer  = (LAYER*)network->layers->last->data;
+
+    int inputCols  = firstLayer->nNeurons; 
+    int outputCols = lastLayer->nNeurons; 
+
+    printf("Training... (Epochs: %d, Samples: %d, Inputs: %d, Outputs: %d)\n", epochs, dataRows, inputCols, outputCols);
+
+    for (int e = 0; e < epochs; e++) 
+    {
+        float totalError = 0;
+
+        for (int i = 0; i < dataRows; i++) 
+        {
+            // This is were we move the window for the current row
+            // since inputData is saving the original position of the array
+            // X and y (inputs and targets)
+            // once we reestart the loop, the position will be calculated correctly again
+            // so to speak, network->inputs/targets is an iterator inside the dataframe
+            // this window's end is defined by the amount of neurons in the input/output layer
+            // for inputs and targets array respectively
+
+            network->inputs  = inputData  + (i * inputCols); // Math to find the row in the flattened array 
+            network->targets = targetData + (i * outputCols);
+
+            LIST *nodeList = firstLayer->perceptrons;
+            int k = 0;
+
+            // Load the raw data in the neurons
+            // stepForward already handles the logic to decide
+            // wether the neuron activates or not
+            while(nodeList) 
+            {
+                NODE *n = (NODE*)nodeList->data;
+                PERCEPTRON *p = (PERCEPTRON*)n->data;
+    
+                p->output = network->inputs[k]; 
+                
+                nodeList = nodeList->next;
+                k++;
+            }
+
+            network->currentLayer = network->layers->first; 
+            
+            // stepForward until the returned value is 1
+            // which means that the pass forward state is finished
+            while(!stepForward(network));
+
+            // stepBackwards until the returned value is 1
+            // which means the backpropagation state is over
+            while(stepBackward(network) == 0);
+            
+        }
+
+        if (e % 1000 == 0) {
+            printf("Epoca %d completada...\n", e);
+        }
+    }
 }
 
 float sigmoid(float x) 
