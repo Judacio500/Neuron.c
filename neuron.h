@@ -5,7 +5,6 @@
 #include<math.h>
 #include<time.h>
 #include"graph.h"
-#include"ani.h"
 #include"list.h"
 
  /*
@@ -14,8 +13,8 @@
     before compiling the network.
  */
 
-typedef float(Actv*)(float weightedSum);
-typedef int (fitFunc*)(struct model *network, float *inputData, float *targetData, int dataRows, int epochs, float learningRate) 
+typedef float(*Actv)(float weightedSum);
+typedef int (*fitFunc)(struct model *network, float *inputData, float *targetData, int dataRows, int epochs, float learningRate); 
 
 typedef struct perceptron
 {                           
@@ -30,9 +29,9 @@ typedef struct layer
     struct list *perceptrons;   // Layers have a list of all the perceptrons in them, is a differen way to acces
                                 // the network, layers do not hold the struct perceptron but a NODE
                                 // from graph.h
-    Actv *activation;           // This is a general activation function, each layer architecture
+    Actv activation;           // This is a general activation function, each layer architecture
                                 // is decided beforehand and an activation function must be selected
-    Actv *dActivation;          // the derivative of said activation (currently just featuring sigmoid)
+    Actv dActivation;          // the derivative of said activation (currently just featuring sigmoid)
                                 // so it will be hard coded but adding this pointer makes it so the library 
                                 // is scalable
 }LAYER;
@@ -78,6 +77,7 @@ int stepForward(MODEL *network);
 int stepBackward(MODEL *network);
 int train(MODEL *network, float *inputData, float *targetData, int dataRows, int epochs, float learningRate);
 float sigmoid(float x);
-float d_sigmoid(float output);
+float dSigmoid(float output);
+float predict(MODEL *network, float *input); 
 
 #endif

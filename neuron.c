@@ -1,6 +1,6 @@
 #include"neuron.h"
 
-MODEL *createModel(float learningRate)
+MODEL *createModel()
 {
     MODEL *newM = (MODEL*)malloc(sizeof(MODEL));
 
@@ -29,8 +29,6 @@ LAYER *createLayer(int nNeurons, Actv activation)
     newL->dActivation = dSigmoid;   // Hardcoded the activation derivative
                                     // this function will be assigned automatically when there is more functions
     newL->perceptrons = NULL;   
-    newL->currentLayer = NULL;
-
     return newL;
 }
 
@@ -163,7 +161,7 @@ int stepForward(MODEL *network)
             NODE *destNode = connections->destinationNode;
             PERCEPTRON *destP = (PERCEPTRON*)destNode->data;
             destP->output += currOutput * connections->weight;
-            connections = connections->next;
+            connections = connections->nextNode;
         }
         
         nodeList = nodeList->next;
@@ -273,7 +271,7 @@ int stepBackward(MODEL *network)
                 float delta = network->learningRate * nextP->gradient * output;
                 connection->weight += delta;
 
-                connection = connection->next; // Next node i affected
+                connection = connection->nextNode; // Next node i affected
             }
             
             // Now we know the total blame (acumGradient).
@@ -360,6 +358,36 @@ int train(MODEL *network, float *inputData, float *targetData, int dataRows, int
             printf("Epoca %d completada...\n", e);
         }
     }
+
+    return 0;
+}
+
+float predict(MODEL *network, float *input)
+{
+    LAYER *firstL = (LAYER*)network->layers->first->data;
+    LIST *nodeList = firstL->perceptrons;
+    int k = 0;
+
+    while(nodeList)
+    {
+        NODE *n = (NODE*)nodeList->data;            // Graph wrapper
+        PERCEPTRON *p = (PERCEPTRON*)n->data;       // For each perceptron
+
+        p->output = input[k];                       // Inject input value
+        nodeList = nodeList->next;
+        k++;
+    }
+
+    network->currentLayer = network->layers->first;
+
+    while(!stepForward(network));
+
+    LAYER *lastL = (LAYER*)network->layers->last->data;
+    
+    NODE *outNode = (NODE*)lastL->perceptrons->data;
+    PERCEPTRON *outP = (PERCEPTRON*)outNode->data;
+
+    return outP->output;
 }
 
 float sigmoid(float x) 
