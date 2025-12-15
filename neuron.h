@@ -11,10 +11,11 @@
  /*
     This library uses rand() for weight and bias initialization.
     Please call srand(time(NULL)) or srand(seed) in your main() 
-    before creating the network.
+    before compiling the network.
  */
 
 typedef float(Actv*)(float weightedSum);
+typedef int (fitFunc*)(struct model *network, float *inputData, float *targetData, int dataRows, int epochs, float learningRate) 
 
 typedef struct perceptron
 {                           
@@ -57,6 +58,14 @@ typedef struct model
     // once we hit fit we will need:
     float *inputs;           // An input flattened array    
     float *targets;          // A target flattened array
+
+    // Then there is this, interesting decission for this experimental library
+    // fit is callback for 2 reasons, to simulate the classic modelo.fit with modelo->fit()
+    // and because this allows us to create a fit function that works differently such as 
+    // a straighter way to fit the model instead of the weird automaton thing we did in the .c
+
+    fitFunc fit; 
+
 }MODEL;
 
 MODEL *createModel();
@@ -67,6 +76,7 @@ int compileNetwork(MODEL *network);
 float randomWeight();
 int stepForward(MODEL *network); 
 int stepBackward(MODEL *network);
+int train(MODEL *network, float *inputData, float *targetData, int dataRows, int epochs, float learningRate);
 float sigmoid(float x);
 float d_sigmoid(float output);
 
