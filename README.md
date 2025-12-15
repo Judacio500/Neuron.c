@@ -1,2 +1,1 @@
-# Neuron.c
-Step by step neural network training with simple activation functions, and abstract architecture
+Step by step MLP training with simple activation functions (actually just sigmoid), and abstract syntax
