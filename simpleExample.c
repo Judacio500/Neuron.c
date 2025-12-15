@@ -33,7 +33,7 @@ int main() {
 
     compileNetwork(m);
 
-    m->fit(m, inputs, targets, 4, 5000, 0.2);
+    m->fit(m, inputs, targets, 4, 1000, 0.5);
 
     printf("\nResultado Final\n");
     

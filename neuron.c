@@ -199,7 +199,7 @@ int stepBackward(MODEL *network)
     
     if (network->currentLayer->next == NULL) 
     { 
-        int t_idx = 0;
+        int tIdx = 0;
         while(nodeList)
         {
             NODE *n = (NODE*)nodeList->data;
@@ -222,7 +222,7 @@ int stepBackward(MODEL *network)
             */    
         
             float output = p->output;      // What we guessed
-            float target = network->targets[t_idx];      // What it should be 
+            float target = network->targets[tIdx];      // What it should be 
 
             
             // Gradient = Error * Derivative
@@ -235,7 +235,7 @@ int stepBackward(MODEL *network)
             p->bias += network->learningRate * p->gradient;
 
             nodeList = nodeList->next;
-            t_idx++;
+            tIdx++;
         }
     } 
     
@@ -348,14 +348,40 @@ int train(MODEL *network, float *inputData, float *targetData, int dataRows, int
             // which means that the pass forward state is finished
             while(!stepForward(network));
 
+            // HARDCODED MSE 
+            // the whole block can be changed for 
+            // metric(params) 
+
+            // We extract the error from the last layer
+            LIST *outNodes = lastLayer->perceptrons;
+            int tIdx = 0;
+            
+            while(outNodes) 
+            {
+                NODE *n = (NODE*)outNodes->data;
+                PERCEPTRON *p = (PERCEPTRON*)n->data;
+                
+                // Difference between what it should be and what it actualy is
+                float error = network->targets[tIdx] - p->output;
+                
+                // Squeared Error
+                totalError += (error * error);
+                
+                outNodes = outNodes->next;
+                tIdx++;
+            }
+
             // stepBackwards until the returned value is 1
             // which means the backpropagation state is over
             while(stepBackward(network) == 0);
-            
-        }
 
-        if (e % 1000 == 0) {
-            printf("Epoca %d completada...\n", e);
+            if (e % 1 == 0) 
+            {
+                // MSE
+                float mse = totalError / (dataRows * outputCols);
+                printf("Epoch %d completed | MSE: %f\n", e, mse);
+            }
+            
         }
     }
 
