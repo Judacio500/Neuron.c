@@ -31,6 +31,9 @@ typedef struct layer
                                 // from graph.h
     Actv *activation;           // This is a general activation function, each layer architecture
                                 // is decided beforehand and an activation function must be selected
+    Actv *dActivation;          // the derivative of said activation (currently just featuring sigmoid)
+                                // so it will be hard coded but adding this pointer makes it so the library 
+                                // is scalable
 }LAYER;
 
 typedef struct model
@@ -49,6 +52,11 @@ typedef struct model
     */
     struct queue *layers;        // Double linked queue to acces all the layers
     struct list *currentLayer;
+    float learningRate;
+
+    // once we hit fit we will need:
+    float *inputs;           // An input flattened array    
+    float *targets;          // A target flattened array
 }MODEL;
 
 MODEL *createModel();
@@ -58,6 +66,7 @@ int addLayer(MODEL *network, int nNeurons, Actv activation);
 int compileNetwork(MODEL *network);
 float randomWeight();
 int stepForward(MODEL *network); 
+int stepBackward(MODEL *network);
 float sigmoid(float x);
 float d_sigmoid(float output);
 
