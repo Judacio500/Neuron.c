@@ -17,9 +17,9 @@ MODEL *createModel()
     return newM; 
 }
 
-LAYER *createLayer(int nNeurons, Actv activation)
+MLAYER *createLayer(int nNeurons, Actv activation)
 {
-    LAYER *newL = (LAYER*)malloc(sizeof(LAYER));
+    MLAYER *newL = (MLAYER*)malloc(sizeof(MLAYER));
 
     if(!newL)
         return NULL;
@@ -48,7 +48,7 @@ PERCEPTRON *createPerceptron()
 
 int addLayer(MODEL *network, int nNeurons, Actv activation)
 {
-    LAYER *newL = createLayer(nNeurons,activation);
+    MLAYER *newL = createLayer(nNeurons,activation);
 
     if(!newL)
         return -1;
@@ -87,8 +87,8 @@ int compileNetwork(MODEL *network)
 
     while(iter && iter->next)
     {
-        LAYER *A = (LAYER*)iter->data;
-        LAYER *B = (LAYER*)iter->next->data;
+        MLAYER *A = (MLAYER*)iter->data;
+        MLAYER *B = (MLAYER*)iter->next->data;
         LIST *percA = A->perceptrons;   
         
         for(int i = 0; i<A->nNeurons; i++)
@@ -125,8 +125,8 @@ int stepForward(MODEL *network)
         return 1;
     }
 
-    LAYER *currL = (LAYER*)network->currentLayer->data;
-    LAYER *nextL = (LAYER*)network->currentLayer->next->data;
+    MLAYER *currL = (MLAYER*)network->currentLayer->data;
+    MLAYER *nextL = (MLAYER*)network->currentLayer->next->data;
     
     LIST *nodeList = nextL->perceptrons;
 
@@ -194,7 +194,7 @@ int stepBackward(MODEL *network)
     if (!network->currentLayer) 
         return 1;
 
-    LAYER *currL = (LAYER*)network->currentLayer->data;
+    MLAYER *currL = (MLAYER*)network->currentLayer->data;
     LIST *nodeList = currL->perceptrons;
     
     if (network->currentLayer->next == NULL) 
@@ -300,8 +300,8 @@ int train(MODEL *network, float *inputData, float *targetData, int dataRows, int
         So if layer 1 has 4 neurons then the input in the flattened array has a length
         of 4 before starting the next row
     */
-    LAYER *firstLayer = (LAYER*)network->layers->first->data;
-    LAYER *lastLayer  = (LAYER*)network->layers->last->data;
+    MLAYER *firstLayer = (MLAYER*)network->layers->first->data;
+    MLAYER *lastLayer  = (MLAYER*)network->layers->last->data;
 
     int inputCols  = firstLayer->nNeurons; 
     int outputCols = lastLayer->nNeurons; 
@@ -390,7 +390,7 @@ int train(MODEL *network, float *inputData, float *targetData, int dataRows, int
 
 float predict(MODEL *network, float *input)
 {
-    LAYER *firstL = (LAYER*)network->layers->first->data;
+    MLAYER *firstL = (MLAYER*)network->layers->first->data;
     LIST *nodeList = firstL->perceptrons;
     int k = 0;
 
@@ -408,7 +408,7 @@ float predict(MODEL *network, float *input)
 
     while(!stepForward(network));
 
-    LAYER *lastL = (LAYER*)network->layers->last->data;
+    MLAYER *lastL = (MLAYER*)network->layers->last->data;
     
     NODE *outNode = (NODE*)lastL->perceptrons->data;
     PERCEPTRON *outP = (PERCEPTRON*)outNode->data;

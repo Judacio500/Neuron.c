@@ -23,7 +23,7 @@ typedef struct perceptron
     float gradient;
 }PERCEPTRON;
 
-typedef struct layer
+typedef struct mlayer
 {
     int nNeurons;
     struct list *perceptrons;   // Layers have a list of all the perceptrons in them, is a differen way to acces
@@ -34,7 +34,7 @@ typedef struct layer
     Actv dActivation;          // the derivative of said activation (currently just featuring sigmoid)
                                 // so it will be hard coded but adding this pointer makes it so the library 
                                 // is scalable
-}LAYER;
+}MLAYER;
 
 typedef struct model
 {
@@ -68,7 +68,7 @@ typedef struct model
 }MODEL;
 
 MODEL *createModel();
-LAYER *createLayer(int nNeurons, Actv activation);
+MLAYER *createLayer(int nNeurons, Actv activation);
 PERCEPTRON *createPerceptron();
 int addLayer(MODEL *network, int nNeurons, Actv activation);
 int compileNetwork(MODEL *network);
