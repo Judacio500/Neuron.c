@@ -65,6 +65,15 @@ typedef struct model
 
     fitFunc fit; 
 
+    // Training context for graphic implementation
+    // this is not correct but is what we got
+    float *baseInputs;  
+    float *baseTargets;  
+    int totalSamples;     
+    int maxEpochs;
+    int currentSample;      
+    int currentEpoch;      
+    float epochErrorAccum;
 }MODEL;
 
 MODEL *createModel();

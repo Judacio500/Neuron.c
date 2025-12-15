@@ -67,7 +67,8 @@ typedef enum figures
     POLYGON,
     LINE,
     CIRCLE,
-    OVAL
+    OVAL,
+    TEXT
 }FIG;
 
 typedef enum animationStatus
@@ -82,7 +83,8 @@ typedef enum animationCycle
     ALIVE,      // Sigue animándose normalmente
     FROZEN,     // Se queda quieto en su último frame dibujado
     HIDDEN,     // Deja de dibujarse 
-    LOOP        // Reinicia su ciclo, para acciones rutinarias, como 4 frames de caminata/correr/saltar
+    LOOP,       // Reinicia su ciclo, para acciones rutinarias, como 4 frames de caminata/correr/saltar
+    TEMPORAL    // Objects that won't be copied into the next panel by animationSimple
 }LIFE;
 
 typedef struct animation
@@ -220,6 +222,7 @@ CRD *initCoord(float x, float y, float z);
 F *initFigure(LIST *pointOffSet, CRD *localPosition, CRD *localRotation, enum figures f);
 TRIGGER *initTrigger(Check check, STATUS *targetStatus);
 TRANSFORM *initPhysics(F *colision, CRD *pos, CRD *scale, CRD *rotation);
+OBJECT *customObj(void *custom);
 OBJECT *initObject(char *objectName, char *layerName, TRANSFORM *initial, LIST *figures);
 SCENE *initScene(float width, float height);
 LAYER *initLayer(char *layerName, Behavior initialBehavior);
@@ -232,6 +235,7 @@ int addLayer(PANEL *p, LAYER *l);
 int addObject(PANEL *p, LAYER *l, OBJECT *o);
 int addColission(OBJECT *o, F *colissionBox);
 F *generateFigure(enum figures f, DESIGN *des, float arg1, float arg2, float localX, float localY, float zPriority, float rotX, float rotY, float rotZ);
+F *generateText(DESIGN *des, char *text);
 LIST *triangleOffSet(float base, float height);
 LIST *lineOffSet(float length);
 LIST *circleOffSet(int smoothness, float radius);

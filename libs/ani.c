@@ -425,6 +425,19 @@ LIST *triangleOffSet(float base, float height)
     return offSet;
 }
 
+F *generateText(DESIGN *des, char *text)
+{
+   LIST *offSet = NULL;
+   
+   char *saveText = strdup(text); // copia dinamica
+
+   handleInsert(&offSet,saveText,0,SIMPLE);
+
+   F *newF = initFigure(offSet,des,NULL,NULL,TEXT);
+
+   return newF;
+}
+
 F *generateFigure(enum figures figType, DESIGN *des, float arg1, float arg2, float localX, float localY, float zPriority, float rotX, float rotY, float rotZ)
 {
     LIST *offSet = getOffSet(figType, arg1, arg2);
@@ -558,7 +571,15 @@ PANEL *generatePanelFromObjects(SCENE *camera, LIST *objects)
     LIST *current = objects;
     while(current)
     {
-        OBJECT *obj = instanceObject((OBJECT*)current->data); // Los paneles son instanciados
+        OBJECT *tmplt = (OBJECT*)current->data;
+
+        if(tmplt->status == TEMPORAL)   // Si el objeto es temporal en el panel no lo copiamos
+        {
+            current = current->next;
+            continue;
+        }
+
+        OBJECT *obj = instanceObject(tmplt);                  // Los paneles son instanciados
                                                               // todos los objetos insertados son instancias
                                                               // del objeto anterior, ninguno es el mismo
                                                               // el transform es unico porque referencia a la posicion del objeto
@@ -567,8 +588,6 @@ PANEL *generatePanelFromObjects(SCENE *camera, LIST *objects)
         
         LAYER *targetLayer = NULL;
         EHASH *found = hashing(newP->layers, obj->layerKey);
-
-        printf("No es el hashing para %s", obj->key);
 
         if(found)
         {
@@ -650,14 +669,6 @@ OBJECT *instanceObject(OBJECT *tmplt)
     */
 
     OBJECT *newObj = initObject(tmplt->key, tmplt->layerKey, NULL, tmplt->figures); //Las figuras, el nombre y la capa se mantienen igual
-    
-
-    printf("\n\nPara %s\n", tmplt->key);
-    if(newObj->key && newObj->layerKey)
-        puts("Se copio la llave");
-    else
-        puts("No se copio la llave");
-
 
     if(!newObj) 
         return NULL;
@@ -699,7 +710,7 @@ OBJECT *instanceObject(OBJECT *tmplt)
     newObj->activeStatus = tmplt->activeStatus;
     newObj->currentFrame = tmplt->currentFrame;
 
-    printf("\nSe copio bien la posicion\n");
+    newObj->custom = tmplt->custom;
 
     return newObj;
 }
@@ -1039,7 +1050,7 @@ int animationSimple(ANI *toModify, SCENE *absolute, LIST *initialObjects, int fr
             OBJECT *current = (OBJECT*)objects->data;
 
             if(current->activeStatus && current->activeStatus->func)
-                current->activeStatus->func(current,i,current->activeStatus->params,nextPanel->allObjects); // Simulamos vida para la lista global de objetos 
+                current->activeStatus->func(current,i,current->activeStatus->params,nextPanel); // Simulamos vida para la lista global de objetos 
                                                                                                             // esto es hermoso porque cada panel copia su propio estado de los objetos
                                                                                                             // al final de la animacion la lista esta lista para seguir con los estados anteriores
                                                                                                             // pero a lo mejor añadiendo nuevos triggers y asi la lista de objetos cambia de manera global
@@ -1101,6 +1112,42 @@ void drawFigure(F *fig)
     glPopMatrix();
 }
 
+void drawText(F *fig)
+{
+    if (!fig || !fig->offSet) 
+        return;
+
+    LIST *textWrap = fig->offSet;
+    char *text = (char*)textWrap->data;
+    
+    if(fig->color && fig->color->color)
+    {
+        glColor4f(fig->color->color->x, fig->color->color->y, fig->color->color->z, fig->color->transparency); 
+    }
+    else
+    {
+        glColor3f(1, 1, 1);
+    }
+
+    float x = 0;
+    float y = 0;
+
+    if(fig->relPos)
+    {
+        x = fig->relPos->x;
+        y = fig->relPos->y;
+    }
+
+    glRasterPos2f(x, y); 
+
+    int len = strlen(text);
+
+    for (int i = 0; i < len; i++) 
+    {
+        glutBitmapCharacter(GLUT_BITMAP_HELVETICA_10, text[i]);
+    }
+}
+
 void drawObject(OBJECT *obj)
 {
     if (!obj || !obj->t)
@@ -1126,7 +1173,11 @@ void drawObject(OBJECT *obj)
     LIST *fNode = obj->figures;
     while (fNode)
     {
-        drawFigure((F*)fNode->data);
+        F *currFig = (F*)fNode->data;
+        if(currFig->f != TEXT)
+            drawFigure(currFig);
+        else
+            drawText(currFig);
         fNode = fNode->next;
     }
 
@@ -1255,8 +1306,10 @@ int checkVision(OBJECT *self, void *env)
     if (!self || !self->t || !env)
         return 0;
 
+    PANEL *p = (PANEL*)env;
+
     // Casteo a lista porque animationSimple pasa la lista de objetos vivos
-    LIST *iter = (LIST*)env;
+    LIST *iter = p->allObjects;
 
     // Definimos el rango de vision hacia la derecha (X positivo)
     // 5.0f es la distancia de vision (ajustable)
